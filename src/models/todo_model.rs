@@ -8,3 +8,14 @@ pub struct Todo {
     pub task: String,
     pub completed: bool
 }
+
+impl Todo {
+    pub fn new(task: &dyn ToString, completed: bool) -> Self {
+        Todo {
+            id: None,
+            task: task.to_string(),
+            completed
+        }
+    }
+}
+                
