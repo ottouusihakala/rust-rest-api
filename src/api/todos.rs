@@ -8,8 +8,7 @@ use actix_web::{
 
 #[get("/todo/{id}")]
 pub async fn get_todo(db: Data<MongoRepo>, path: Path<String>) -> HttpResponse {
-    let id = path.into_inner();
-    db.get_todo(&id)
+    db.get_todo(&path)
         .await
         .map(|todo| HttpResponse::Ok().json(todo))
         .unwrap_or_else(|err| match err {
