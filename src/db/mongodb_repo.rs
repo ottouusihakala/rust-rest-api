@@ -1,6 +1,5 @@
 use mongodb::{
     bson::{oid::ObjectId, doc},
-    results::InsertOneResult,
     Client, Collection, options::ClientOptions,
 };
 use crate::models::todo_model::Todo;
@@ -11,7 +10,11 @@ pub enum Error {
     #[error("Invalid ObjectId")]
     ObjectIdError(#[from] mongodb::bson::oid::Error),
     #[error("MongoDB Error")]
-    MongoDBError(#[from] mongodb::error::Error)
+    MongoDBError(#[from] mongodb::error::Error),
+    #[error("Task not found")]
+    TaskNotFound,
+    #[error("Unexpected error")]
+    UnexpectedError
 }
 
 pub struct MongoRepo {
@@ -27,22 +30,23 @@ impl MongoRepo {
         Ok(MongoRepo { todos })
     }
 
-    pub async fn create_todo(&self, new_todo: Todo) -> Result<InsertOneResult, Error> {
-        let new_doc = Todo::new(&new_todo.task, new_todo.completed);
-        let todo = self
+    pub async fn create_todo(&self, todo: Todo) -> Result<ObjectId, Error> {
+        self
             .todos
-            .insert_one(new_doc, None)
-            .await?;
-        Ok(todo)
+            .insert_one(todo, None)
+            .await?
+            .inserted_id
+            .as_object_id()
+            .ok_or(Error::UnexpectedError)
     }
 
-    pub async fn get_todo(&self, id: &str) -> Result<Option<Todo>, Error> {
+    pub async fn get_todo(&self, id: &str) -> Result<Todo, Error> {
         let obj_id = ObjectId::parse_str(id)?;
         let filter = doc! {"_id": obj_id};
-        let todo = self
+        self
             .todos
             .find_one(filter, None)
-            .await?;
-        Ok(todo)
+            .await?
+            .ok_or(Error::TaskNotFound)
     }
 }
