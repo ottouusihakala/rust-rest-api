@@ -2,26 +2,28 @@ use crate::{models::todo_model::Todo, db::mongodb_repo::{MongoRepo, Error}};
 use actix_web::{
     get,
     post,
+    Responder,
+    http::StatusCode,
     web::{Data, Json, Path},
-    HttpResponse,
+    error::ResponseError,
 };
 
+impl ResponseError for Error {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            Self::ObjectIdError(_) => StatusCode::BAD_REQUEST,
+            Self::MongoDBError(_) | Self::UnexpectedError => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::TaskNotFound => StatusCode::NOT_FOUND,
+        }
+    }
+}
+
 #[get("/todo/{id}")]
-pub async fn get_todo(db: Data<MongoRepo>, path: Path<String>) -> HttpResponse {
-    db.get_todo(&path)
-        .await
-        .map(|todo| HttpResponse::Ok().json(todo))
-        .unwrap_or_else(|err| match err {
-            Error::ObjectIdError(err) => HttpResponse::BadRequest().body(err.to_string()),
-            _ => HttpResponse::InternalServerError().body(err.to_string())
-        })
+pub async fn get_todo(db: Data<MongoRepo>, path: Path<String>) -> Result<impl Responder, Error> {
+    db.get_todo(&path).await.map(Json)
 }
 
 #[post("/todo")]
-pub async fn create_todo(db: Data<MongoRepo>, new_todo: Json<Todo>) -> HttpResponse {
-    let data = Todo::new(&new_todo.task, new_todo.completed);
-    db.create_todo(data)
-        .await
-        .map(|todo| HttpResponse::Ok().json(todo))
-        .unwrap_or_else(|err| HttpResponse::InternalServerError().body(err.to_string()))
+pub async fn create_todo(db: Data<MongoRepo>, todo: Json<Todo>) -> Result<impl Responder, Error> {
+    db.create_todo(todo.into_inner()).await.map(Json)
 }
