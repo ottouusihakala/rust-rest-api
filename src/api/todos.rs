@@ -24,7 +24,6 @@ pub async fn get_todo(db: Data<MongoRepo>, path: Path<String>) -> Result<impl Re
 }
 
 #[post("/todo")]
-pub async fn create_todo(db: Data<MongoRepo>, new_todo: Json<Todo>) -> Result<impl Responder, Error> {
-    let data = Todo::new(&new_todo.task, new_todo.completed);
-    db.create_todo(data).await.map(Json)
+pub async fn create_todo(db: Data<MongoRepo>, todo: Json<Todo>) -> Result<impl Responder, Error> {
+    db.create_todo(todo.into_inner()).await.map(Json)
 }

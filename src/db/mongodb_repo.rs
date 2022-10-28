@@ -30,7 +30,8 @@ impl MongoRepo {
         Ok(MongoRepo { todos })
     }
 
-    pub async fn create_todo(&self, todo: Todo) -> Result<ObjectId, Error> {
+    pub async fn create_todo(&self, mut todo: Todo) -> Result<ObjectId, Error> {
+        todo.id = None;
         self
             .todos
             .insert_one(todo, None)
