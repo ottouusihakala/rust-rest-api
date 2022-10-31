@@ -18,6 +18,11 @@ impl ResponseError for Error {
     }
 }
 
+#[get("/todo")]
+pub async fn get_all_todos(db: Data<MongoRepo>) -> Result<impl Responder, Error> {
+    db.get_all_todos().await.map(Json)
+}
+
 #[get("/todo/{id}")]
 pub async fn get_todo(db: Data<MongoRepo>, path: Path<String>) -> Result<impl Responder, Error> {
     db.get_todo(&path).await.map(Json)
