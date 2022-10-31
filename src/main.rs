@@ -3,7 +3,7 @@ mod models;
 mod db;
 
 use actix_web::{get, App, HttpResponse, HttpServer, Responder, web::Data};
-use api::todos::{create_todo, get_todo};
+use api::todos::{create_todo, get_todo, get_all_todos};
 use db::mongodb_repo::MongoRepo;
 use std::env;
 use dotenv::dotenv;
@@ -25,6 +25,7 @@ async fn main() -> anyhow::Result<()> {
             .service(hello)
             .service(create_todo)
             .service(get_todo)
+            .service(get_all_todos)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

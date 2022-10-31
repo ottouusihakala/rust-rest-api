@@ -1,6 +1,7 @@
+use futures::TryStreamExt;
 use mongodb::{
     bson::{oid::ObjectId, doc},
-    Client, Collection, options::ClientOptions,
+    Client, Collection, options::ClientOptions
 };
 use crate::models::todo_model::Todo;
 use thiserror;
@@ -49,5 +50,14 @@ impl MongoRepo {
             .find_one(filter, None)
             .await?
             .ok_or(Error::TaskNotFound)
+    }
+
+    pub async fn get_all_todos(&self) -> Result<Vec<Todo>, Error> {
+        let cursor = self
+            .todos
+            .find(None, None)
+            .await?;
+        let v = cursor.try_collect().await?;
+        Ok(v)
     }
 }

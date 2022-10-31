@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 actix-web = "4"
 mongodb = "2.1.0"
+futures = "0.3.25"
 serde = "1.0.146"
 dotenv = "0.15.0"
 thiserror = "1.0.37"
